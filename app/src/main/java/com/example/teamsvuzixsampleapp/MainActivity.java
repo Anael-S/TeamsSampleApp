@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -136,10 +137,23 @@ public class MainActivity extends AppCompatActivity {
             // Create renderer
             previewRenderer = new VideoStreamRenderer(stream, this);
             preview = previewRenderer.createView(new CreateViewOptions(ScalingMode.FIT));
+
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d("RMTST", "preview size DELAYED > h= " + preview.getHeight() + " / w=" + preview.getWidth());
+                    Log.d("RMTST", "preview isShown DELAYED > shown= " + preview.isShown()
+                            + " / " + preview.getVisibility());//View.VISIBLE = 0
+
+                }
+            }, 3000);
+
+            //Both callbacks are never called on the updated glasses (Android 11)
             previewRenderer.addRendererListener(new RendererListener() {
                 @Override
                 public void onFirstFrameRendered() {
                     Log.d("RMTST", "First frame rendered here");
+                    Log.d("RMTST", "preview size > h= " + preview.getHeight() + " / w=" + preview.getWidth());
                 }
 
                 @Override
