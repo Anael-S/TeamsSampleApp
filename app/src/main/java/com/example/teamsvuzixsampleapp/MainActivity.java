@@ -95,31 +95,26 @@ public class MainActivity extends AppCompatActivity {
 
     private void startTeamsCallPreview() {
         Activity activity = this;
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("RMTST", "startTeamsCallPreview");
-                try {
-                    CallClient callClient = new CallClient();
-                    deviceManager = callClient.getDeviceManager(getApplicationContext()).get();
-                } catch (Exception ex) {
-                    makeText(getApplicationContext(), "Failed to set device manager.", Toast.LENGTH_SHORT).show();
-                }
-                List<VideoDeviceInfo> cameras = deviceManager.getCameras();
+        Log.d("RMTST", "startTeamsCallPreview");
+        try {
+            CallClient callClient = new CallClient();
+            deviceManager = callClient.getDeviceManager(getApplicationContext()).get();
+        } catch (Exception ex) {
+            makeText(getApplicationContext(), "Failed to set device manager.", Toast.LENGTH_SHORT).show();
+        }
+        List<VideoDeviceInfo> cameras = deviceManager.getCameras();
 
-                if (!cameras.isEmpty()) {
-                    currentCamera = getBackCameraOrNextAvailable(deviceManager);
-                    currentVideoStream = new LocalVideoStream(currentCamera, activity);
+        if (!cameras.isEmpty()) {
+            currentCamera = getBackCameraOrNextAvailable(deviceManager);
+            currentVideoStream = new LocalVideoStream(currentCamera, activity);
 
-                    LocalVideoStream[] videoStreams = new LocalVideoStream[1];
-                    videoStreams[0] = currentVideoStream;
-                    showPreview(currentVideoStream);
-                } else {
-                    Toast.makeText(activity, "NO CAMERA FOUND!!", Toast.LENGTH_LONG).show();
-                    Log.e("RMTST", "startTeamsCallPreview > NO CAMERA ACCESS");
-                }
-            }
-        }, 5000);
+            LocalVideoStream[] videoStreams = new LocalVideoStream[1];
+            videoStreams[0] = currentVideoStream;
+            showPreview(currentVideoStream);
+        } else {
+            Toast.makeText(activity, "NO CAMERA FOUND!!", Toast.LENGTH_LONG).show();
+            Log.e("RMTST", "startTeamsCallPreview > NO CAMERA ACCESS");
+        }
     }
 
     private void showPreview(LocalVideoStream stream) {
@@ -132,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 try {
                     localvideocontainer.addView(preview);
-                } catch (Exception e){
+                } catch (Exception e) {
                     Log.e("RMTST", "Showing preview CRASHED 2");
                 }
             });
