@@ -22,12 +22,14 @@ import com.azure.android.communication.calling.CameraFacing;
 import com.azure.android.communication.calling.CreateViewOptions;
 import com.azure.android.communication.calling.DeviceManager;
 import com.azure.android.communication.calling.LocalVideoStream;
+import com.azure.android.communication.calling.RendererListener;
 import com.azure.android.communication.calling.ScalingMode;
 import com.azure.android.communication.calling.VideoDeviceInfo;
 import com.azure.android.communication.calling.VideoStreamRenderer;
 import com.azure.android.communication.calling.VideoStreamRendererView;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -54,6 +56,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         handlePermissions();
+    }
+
+    @Override
+    protected void onPause() {
+        if (preview != null) {
+            preview.dispose();
+        }
+        if (previewRenderer != null) {
+            previewRenderer.dispose();
+        }
+        super.onPause();
     }
 
     public void handlePermissions() {
@@ -123,6 +136,17 @@ public class MainActivity extends AppCompatActivity {
             // Create renderer
             previewRenderer = new VideoStreamRenderer(stream, this);
             preview = previewRenderer.createView(new CreateViewOptions(ScalingMode.FIT));
+            previewRenderer.addRendererListener(new RendererListener() {
+                @Override
+                public void onFirstFrameRendered() {
+                    Log.d("RMTST", "First frame rendered here");
+                }
+
+                @Override
+                public void onRendererFailedToStart() {
+                    Log.e("RMTST", "Renderer FAILED to start here");
+                }
+            });
             preview.setTag(0);
             runOnUiThread(() -> {
                 try {
