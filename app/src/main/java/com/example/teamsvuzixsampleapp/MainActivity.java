@@ -1,34 +1,49 @@
 package com.example.teamsvuzixsampleapp;
 
+import static android.view.KeyEvent.KEYCODE_BACK;
+import static android.view.KeyEvent.KEYCODE_DPAD_CENTER;
+import static android.view.KeyEvent.KEYCODE_DPAD_DOWN;
+import static android.view.KeyEvent.KEYCODE_DPAD_LEFT;
+import static android.view.KeyEvent.KEYCODE_DPAD_RIGHT;
+import static android.view.KeyEvent.KEYCODE_DPAD_UP;
+import static android.view.KeyEvent.KEYCODE_ENTER;
 import static android.widget.Toast.makeText;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import com.azure.android.communication.calling.CallClient;
 import com.azure.android.communication.calling.CameraFacing;
 import com.azure.android.communication.calling.CreateViewOptions;
 import com.azure.android.communication.calling.DeviceManager;
+import com.azure.android.communication.calling.IncomingVideoOptions;
 import com.azure.android.communication.calling.LocalVideoStream;
-import com.azure.android.communication.calling.RendererListener;
+import com.azure.android.communication.calling.OutgoingAudioOptions;
+import com.azure.android.communication.calling.OutgoingVideoOptions;
 import com.azure.android.communication.calling.ScalingMode;
 import com.azure.android.communication.calling.VideoDeviceInfo;
 import com.azure.android.communication.calling.VideoStreamRenderer;
 import com.azure.android.communication.calling.VideoStreamRendererView;
+import com.azure.android.communication.calling.VideoStreamType;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -51,23 +66,30 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         localvideocontainer = findViewById(R.id.localvideocontainer);
+
+        //handlePermissions();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        if(preview!=null){
+            preview.dispose();
+            preview=null;
+        }
+        if(previewRenderer!=null) {
+            previewRenderer.dispose();
+            previewRenderer=null;
+        }
+
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         handlePermissions();
-    }
-
-    @Override
-    protected void onPause() {
-        if (preview != null) {
-            preview.dispose();
-        }
-        if (previewRenderer != null) {
-            previewRenderer.dispose();
-        }
-        super.onPause();
     }
 
     public void handlePermissions() {
@@ -121,9 +143,6 @@ public class MainActivity extends AppCompatActivity {
         if (!cameras.isEmpty()) {
             currentCamera = getBackCameraOrNextAvailable(deviceManager);
             currentVideoStream = new LocalVideoStream(currentCamera, activity);
-
-            LocalVideoStream[] videoStreams = new LocalVideoStream[1];
-            videoStreams[0] = currentVideoStream;
             showPreview(currentVideoStream);
         } else {
             Toast.makeText(activity, "NO CAMERA FOUND!!", Toast.LENGTH_LONG).show();
@@ -137,37 +156,9 @@ public class MainActivity extends AppCompatActivity {
             // Create renderer
             previewRenderer = new VideoStreamRenderer(stream, this);
             preview = previewRenderer.createView(new CreateViewOptions(ScalingMode.FIT));
-
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d("RMTST", "preview size DELAYED > h= " + preview.getHeight() + " / w=" + preview.getWidth());
-                    Log.d("RMTST", "preview isShown DELAYED > shown= " + preview.isShown()
-                            + " / " + preview.getVisibility());//View.VISIBLE = 0
-
-                }
-            }, 3000);
-
-            //Both callbacks are never called on the updated glasses (Android 11)
-            previewRenderer.addRendererListener(new RendererListener() {
-                @Override
-                public void onFirstFrameRendered() {
-                    Log.d("RMTST", "First frame rendered here");
-                    Log.d("RMTST", "preview size > h= " + preview.getHeight() + " / w=" + preview.getWidth());
-                }
-
-                @Override
-                public void onRendererFailedToStart() {
-                    Log.e("RMTST", "Renderer FAILED to start here");
-                }
-            });
             preview.setTag(0);
             runOnUiThread(() -> {
-                try {
-                    localvideocontainer.addView(preview);
-                } catch (Exception e) {
-                    Log.e("RMTST", "Showing preview CRASHED 2");
-                }
+                localvideocontainer.addView(preview);
             });
         } catch (Exception e) {
             Log.e("RMTST", "Showing preview CRASHED");
